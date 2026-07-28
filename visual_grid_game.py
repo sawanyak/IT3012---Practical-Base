@@ -41,7 +41,7 @@ class VisualGridHuntGame:
             fx = random.randint(0, self.width - 1)
             fy = random.randint(0, self.height - 1)
             pos_tuple = (fx, fy)
-            if pos_tuple != (0, 0) and pos_tuple not in self.walls and pos_tuple not in self.toxic_traps:
+            if pos_tuple != (0, 0) and pos_tuple not in self.walls and pos_tuple not in self.food_positions:
                 self.toxic_traps.add(pos_tuple)      
 
         self.score = 0
@@ -166,7 +166,7 @@ class GridGameGUI:
             offset = self.cell_size * 0.25
             x1 = fx * self.cell_size + offset
             y1 = (self.env.height - 1 - fy) * self.cell_size + offset
-            self.canvas.create_polygon(x1, y1, x1, y1 + self.cell_size * 0.5, y1 + self.cell_size * 0.5, fill="purple",
+            self.canvas.create_polygon(x1, y1, x1, y1 + self.cell_size * 0.5, x1 + self.cell_size * 0.5, y1 + self.cell_size * 0.5, fill="purple",
                                     outline="black")  
                         
 
