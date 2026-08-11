@@ -1,11 +1,11 @@
-Answers for questions in the lab sheet 02
+## Answers for questions in the lab sheet 02
 
 1. (Remember) According to Lecture 02, why is it impossible to program a mathematically perfect "Table-Driven Agent" for complex environments like Chess? What happens as the agent's lifetime increases?
 * A table-driven agent works by storing a precomputed correct action for every possible situation it could encounter. But Chess alone has about 10⁴⁰ legal board states and 10¹²⁰ possible game sequences (the Shannon Number). No storage device in the universe is large enough to hold a table that size, and no one could ever write or compile it. As the agent's lifetime increases, the number of percept sequences it must account for grows combinatorially, making the table explode in size so table-driven agents become impossible for any complex, long-lived environment.
 
 
 2. (Understand) Look at the code you wrote for your SimpleReflexAgent. Identify and explain the specific lines of code that represent the "Condition-Action Rules" discussed in the lecture.
-* if percept.get('food_here'):
+    if percept.get('food_here'):
         return facing      # "suck" (food auto-collects on arrival)
     elif percept.get('wall_ahead'):
         return self._LEFT_TURN[facing]   # "turn_left"
