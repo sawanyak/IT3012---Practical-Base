@@ -1,6 +1,7 @@
 from collections import deque
 import heapq
 import random
+import math
 
 # agent.py
 class GreedyGridAgent:
@@ -33,6 +34,15 @@ class SearchAgent:
     def step_cost(self, state) -> int:
         """Cost of moving into `state`. Uniform for now; change this to make UCS interesting."""
         return 1
+
+    def manhattan_distance(self, pos, goal) -> int:
+        """h(n) = |x1 - x2| + |y1 - y2|  -- cost of a 4-way (no diagonal) grid walk."""
+        return abs(pos[0] - goal[0]) + abs(pos[1] - goal[1])
+
+    def euclidean_distance(self, pos, goal) -> float:
+        """h(n) = sqrt((x1 - x2)^2 + (y1 - y2)^2)  -- straight-line distance."""
+        return math.sqrt((pos[0] - goal[0]) ** 2 + (pos[1] - goal[1]) ** 2)
+
 
     def get_successors(self, state, walls, grid_size):
         """Expand a node: returns [(action, next_state, cost), ...] for all legal moves."""
@@ -97,6 +107,36 @@ class SearchAgent:
                     heapq.heappush(frontier, (new_cost, counter, next_state, path + [action]))
         return []
 
+    def astar_search(self, start_pos, goal_pos, walls, grid_size, heuristic_type='manhattan'):
+        """Priority queue ordered by f(n) = g(n) + h(n) -> guided by the heuristic."""
+        heuristic = (self.euclidean_distance if heuristic_type == 'euclidean'
+                     else self.manhattan_distance)
+
+        counter = 0                             # tie-breaker keeps the heap stable
+        h_start = heuristic(start_pos, goal_pos)
+        frontier = [(0 + h_start, 0, counter, start_pos, [])]   # (f, g, tie, pos, path)
+        reached_states = set()                  # states we have already expanded
+
+        while frontier:
+            f_cost, g_cost, _, current_pos, path_taken = heapq.heappop(frontier)
+            if current_pos == goal_pos:
+                return path_taken
+            if current_pos in reached_states:
+                continue                        # a cheaper route to this state already won
+            reached_states.add(current_pos)
+
+            for action, next_pos, move_cost in self.get_successors(current_pos, walls, grid_size):
+                if next_pos in reached_states:
+                    continue
+                g_new = g_cost + move_cost
+                h_new = heuristic(next_pos, goal_pos)
+                f_new = g_new + h_new
+                counter += 1
+                heapq.heappush(frontier, (f_new, g_new, counter, next_pos, path_taken + [action]))
+        return []
+
+    
+
     def sense_and_act(self, percept: dict) -> str:
         """Plan when we have no plan; otherwise just execute the next step of it."""
         if not self.plan:
@@ -105,11 +145,11 @@ class SearchAgent:
             grid_size = percept['grid_size']
             food = percept['all_food']
 
-            if not food:
+            if percept['remaining_food'] == 0:
                 return 'Up'                     # nothing left to chase
 
             # Goal selection: closest pellet by Manhattan distance
-            goal = min(food, key=lambda f: abs(f[0] - start[0]) + abs(f[1] - start[1]))
+            goal = min(food, key=lambda f: self.manhattan_distance(start, f))
 
             if self.active_algo == 'BFS':
                 self.plan = self.bfs_search(start, goal, walls, grid_size)
@@ -117,6 +157,11 @@ class SearchAgent:
                 self.plan = self.dfs_search(start, goal, walls, grid_size)
             elif self.active_algo == 'UCS':
                 self.plan = self.ucs_search(start, goal, walls, grid_size)
+
+            elif self.active_algo == 'AStar':
+                self.plan = self.astar_search(start, goal, walls, grid_size,
+                                              heuristic_type='manhattan')
+                
             else:
                 raise ValueError(f"Unknown algorithm: {self.active_algo}")
 
@@ -124,3 +169,13 @@ class SearchAgent:
                 return 'Up'                     # goal unreachable
 
         return self.plan.pop(0)
+
+
+
+if __name__ == '__main__':
+    # Step 1.1 testing checkpoint
+    agent = SearchAgent()
+    start, goal = (0, 0), (3, 4)
+    print("Manhattan:", agent.manhattan_distance(start, goal))   # expected 7
+    print("Euclidean:", agent.euclidean_distance(start, goal))   # expected 5.0
+

@@ -192,5 +192,5 @@ class GridGameGUI:
 if __name__ == "__main__":
     root = tk.Tk()
     # Try a larger grid size like 12x12 with 15 food and 3 opponents!
-    app = GridGameGUI(root, width=12, height=12, num_food=15, num_opponents=0, algo='DFS')  # Change algo to 'BFS' or 'UCS' to test different search strategies
+    app = GridGameGUI(root, width=12, height=12, num_food=15, num_opponents=0, algo='AStar')  # Change algo to 'BFS' or 'UCS' to test different search strategies
     root.mainloop()
